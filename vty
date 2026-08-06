@@ -1,0 +1,47 @@
+#!/usr/bin/expect -f
+set vty [lindex $argv 0]
+set host localhost
+switch $vty {
+ hlr { set port 4258; set cont osmo-hlr }
+ mgw { set port 4243; set cont osmo-mgw }
+ sgsn { set port 4245; set cont osmo-sgsn }
+ msc { set port 4254; set cont osmo-msc }
+ ggsn { set port 4260; set cont osmo-ggsn }
+ stp { set port 4239; set cont osmo-stp }
+ osmo-hlr { set port 4258; set cont osmo-hlr }
+ osmo-mgw { set port 4243; set cont osmo-mgw }
+ osmo-sgsn { set port 4245; set cont osmo-sgsn }
+ osmo-msc { set port 4254; set cont osmo-msc }
+ osmo-ggsn { set port 4260; set cont osmo-ggsn }
+ osmo-stp { set port 4239; set cont osmo-stp }
+ default { set port 4254; set cont osmo-msc }
+}
+spawn docker exec -it $cont telnet localhost $port
+# expect ">"
+# send "enable\r"
+# expect "#"
+# send "logging enable\r"
+# expect "#"
+# send "logging print category 1\r"
+# expect "#"
+# send "logging print category-hex 0\r"
+# expect "#"
+# send "logging print level 1\r"
+# expect "#"
+# send "logging print file basename last\r"
+# expect "#"
+# send "logging print extended-timestamp 1\r"
+# expect "#"
+# send "logging level set-all notice\r"
+# expect "#"
+# switch $vty {
+#  msc {
+#   send "logging level mm info\r"
+#   expect "#"
+#   send "logging level cc info\r"
+#   expect "#"
+#  }
+# }
+# send "logging filter all 1\r"
+# expect "#"
+interact

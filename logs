@@ -1,0 +1,20 @@
+#!/usr/bin/expect -f
+set vty [lindex $argv 0]
+set host localhost
+switch $vty {
+ hlr { set cont osmo-hlr }
+ mgw { set cont osmo-mgw }
+ sgsn { set cont osmo-sgsn }
+ msc { set cont osmo-msc }
+ ggsn { set cont osmo-ggsn }
+ stp { set cont osmo-stp }
+ osmo-hlr { set cont osmo-hlr }
+ osmo-mgw { set cont osmo-mgw }
+ osmo-sgsn { set cont osmo-sgsn }
+ osmo-msc { set cont osmo-msc }
+ osmo-ggsn { set cont osmo-ggsn }
+ osmo-stp { set cont osmo-stp }
+ default { set cont osmo-msc }
+}
+spawn docker logs $cont -f 
+interact

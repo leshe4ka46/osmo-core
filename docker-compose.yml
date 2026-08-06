@@ -1,0 +1,101 @@
+services:
+  osmo-mgw:
+    build: .
+    image: ghcr.io/leshe4ka46/osmo-core:latest 
+    container_name: osmo-mgw
+    stop_signal: SIGKILL
+    env_file:
+      - .env
+    volumes:
+      - ./conf:/conf
+    network_mode: host
+    command: ["bash", "-c", "cat /conf/osmo-mgw.cfg | envsubst | tee /osmo-mgw.cfg && osmo-mgw"]
+    restart: always
+
+  osmo-stp:
+    build: .
+    image: ghcr.io/leshe4ka46/osmo-core:latest
+    container_name: osmo-stp
+    env_file:
+      - .env
+    volumes:
+      - ./conf:/conf
+    ports:
+      - "${OSMOSTP_PORT}:${OSMOSTP_PORT}/sctp"
+    command: ["bash", "-c", "cat /conf/osmo-stp.cfg | envsubst | tee /osmo-stp.cfg && osmo-stp"]
+    restart: always
+    networks:
+      default:
+        ipv4_address: ${OSMOSTP_IP}
+
+  osmo-msc:
+    build: .
+    image: ghcr.io/leshe4ka46/osmo-core:latest
+    container_name: osmo-msc
+    env_file:
+      - .env
+    volumes:
+      - ./conf:/conf
+    depends_on:
+      - osmo-hlr
+      - osmo-stp
+      - osmo-mgw
+    command: ["bash", "-c", "cat /conf/osmo-msc.cfg | envsubst | tee /osmo-msc.cfg && osmo-msc"]
+    restart: always
+    networks:
+      default:
+        ipv4_address: ${OSMOMSC_IP}
+
+  osmo-hlr:
+    build: .
+    image: ghcr.io/leshe4ka46/osmo-core:latest
+    container_name: osmo-hlr
+    env_file:
+      - .env
+    volumes:
+      - ./conf:/conf
+      - ./hlr:/hlr
+    command: ["bash", "-c", "cat /conf/osmo-hlr.cfg | envsubst | tee /osmo-hlr.cfg && osmo-hlr"]
+    restart: always
+    networks:
+      default:
+        ipv4_address: ${OSMOHLR_IP}
+
+  osmo-sgsn:
+    build: .
+    image: ghcr.io/leshe4ka46/osmo-core:latest
+    container_name: osmo-sgsn
+    env_file:
+      - .env
+    volumes:
+      - ./conf:/conf
+    command: ["bash", "-c", "cat /conf/osmo-sgsn.cfg | envsubst | tee /osmo-sgsn.cfg && osmo-sgsn"]
+    restart: always
+    network_mode: host
+
+  osmo-ggsn:
+    build: .
+    image: ghcr.io/leshe4ka46/osmo-core:latest
+    container_name: osmo-ggsn
+    env_file:
+      - .env
+    volumes:
+      - ./conf:/conf
+    command: ["bash", "-c", "cat /conf/osmo-ggsn.cfg | envsubst | tee /osmo-ggsn.cfg && osmo-ggsn"]
+    restart: always
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    networks:
+      default:
+        ipv4_address: ${OSMOGGSN_IP}
+
+
+networks:
+  default:
+    name: osmo-core
+    ipam:
+      config:
+        - subnet: ${CORE_NETWORK}
+
